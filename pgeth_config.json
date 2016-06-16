@@ -1,4 +1,11 @@
 {
+  "datadir":
+  {
+
+  }
+}
+
+{
   "genesis":
   {
     "nonce": "0xdeadbeefdeadbeef",
