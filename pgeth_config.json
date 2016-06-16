@@ -1,5 +1,5 @@
 {
-  "datadir" : "private_ethereum_blockchain", 
+  "datadir" : "~/private_ethereum_blockchain", 
   "genesis": {
     "nonce": "0xdeadbeefdeadbeef",
     "timestamp": "0x0",
