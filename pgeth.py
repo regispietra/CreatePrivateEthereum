@@ -42,7 +42,7 @@ def init(args):
     str_options = " --verbosity 3 --datadir=" + datadir + " "
     # launch the blockchain with the CustomGenesis.json file
     cmdInit = "geth" + str_options + " init" + " pgeth_config.json"
-    print "cmd: " + cmd
+    print "cmd: " + cmdInit
     subprocess.call(cmd, shell = True) 
 
 def start(args):
