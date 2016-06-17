@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## geth --networkid 100 --identity node1 --verbosity 3 --nodiscover --nat none --datadir=~/myblockchain/node1 account new
 
 import sys
 import argparse
 import subprocess
 import json
 import os
-from subprocess import Popen, PIPE, STDOUT
 
 def load_config_keys(key):
     """ doc """
@@ -18,17 +16,34 @@ def load_config_keys(key):
     d = json.loads(txt)
     return d[key]
 
+def initAccount():
+    """List accounts. Create a default one if there is none"""
+    datadir = load_config_keys("datadir")
+    str_geth = "geth"
+    str_options = " --datadir=" + datadir + " "
+    cmdListAccounts = str_geth + str_options + " account list"
+    print "cmd: " + cmdListAccounts
+    res = subprocess.check_output(cmdListAccounts, shell=True)
+    accountQty = len(res.split('\n')) - 1
+    # check account qty
+    if accountQty > 0:
+        return
+    # create an account
+    cmdCreateAccount = str_geth + str_options + " --password mypassword.txt account new"
+    print "cmd: " + cmdCreateAccount
+    subprocess.call(cmdCreateAccount, shell=True)
+    ## geth --networkid 100 --identity node1 --verbosity 3 --nodiscover --nat none --datadir=~/myblockchain/node1 account new
+
 def init(args):
     """doc3S"""
-    # account new + launch
+    # account new
+    initAccount()
     datadir = load_config_keys("datadir")
-    str_datadir = " --datadir=" + datadir + " "
-    str_options =  " --networkid 100 --identity node1 --verbosity 3 --nodiscover --nat none "
-    str_args = "geth " + str_datadir + str_options 
-    # create account using mypassword.txt
-    subprocess.call("geth --password mypassword.txt account new", shell=True)
+    str_options = " --verbosity 3 --datadir=" + datadir + " "
     # launch the blockchain with the CustomGenesis.json file
-    subprocess.call("geth" + str_options + str_args + " init" + " pgeth_config.json", shell = True) 
+    cmdInit = "geth" + str_options + " init" + " pgeth_config.json"
+    print "cmd: " + cmd
+    subprocess.call(cmd, shell = True) 
 
 def start(args):
     """ doc """
@@ -36,8 +51,9 @@ def start(args):
     str_datadir = " --datadir=" + datadir + " "
     str_options =  " --networkid 100 --identity node1 --verbosity 3 --nodiscover --nat none "
     str_args = "geth " + str_datadir + str_options + "account new"
-    subprocess.call("geth" + str_options + str_datadir + " mine" + " --ipcpath ~/Library/Ethereum/geth.ipc", shell = True)
-    print args
+    cmd = "geth" + str_options + str_datadir + " --mine" + " --ipcpath ~/Library/Ethereum/geth.ipc"
+    print cmd
+    subprocess.call(cmd, shell = True)
 
 def stop(args):
     
