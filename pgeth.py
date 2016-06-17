@@ -43,7 +43,7 @@ def init(args):
     # launch the blockchain with the CustomGenesis.json file
     cmdInit = "geth" + str_options + " init" + " pgeth_config.json"
     print "cmd: " + cmdInit
-    subprocess.call(cmd, shell = True) 
+    subprocess.call(cmdInit, shell = True) 
 
 def start(args):
     """ doc """
