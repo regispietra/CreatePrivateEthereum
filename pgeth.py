@@ -7,6 +7,7 @@ import sys
 import argparse
 import subprocess
 import json
+import os
 from subprocess import Popen, PIPE, STDOUT
 
 def load_config_keys(key):
@@ -29,11 +30,8 @@ def init(args):
     #.stdin.write("toto\ntoto\n")
     #p.communicate(input="totot\ntoto\n")
     # init
-    ##subprocess.call(["geth", str_options, str_datadir, "init"])
-    p = Popen(['geth account new'], stdout=PIPE, stdin=PIPE, stderr=STDOUT) 
-    grep_stdout = p.communicate(input=b'one\ntwo\nthree\nfour\nfive\nsix\n')[0] 
-    print(grep_stdout.decode())
-    #print str_args
+    subprocess.call("geth --password mypassword.txt account new", shell=True)
+        #print str_args
 
 def start(args):
     """ doc """
