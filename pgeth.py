@@ -15,6 +15,25 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+__version__ = '1.0.0'
+
+"""
+Create Private Ethereum Blockchain
+
+This script pilot geth to provide easy functions:
+
+* ./pgeth.py init
+   this function create the blockchain with an account
+* ./pgeth.py start
+
+* ./pgeth.py stop
+
+* ./pgeth.py destroy
+   A function to delete quickly your private blockchain.
+
+"""
+
+
 import sys
 import argparse
 import subprocess
@@ -22,6 +41,7 @@ import json
 import os
 import shutil
 import logging
+import platform
 
 # const in python
 PIDFILE = "/tmp/geth.pid"
@@ -45,6 +65,22 @@ def getDataDir():
     datadir = load_config_keys("datadir")
     datadir = os.path.expanduser(datadir)
     return datadir
+
+def getIpcDir():
+    """Create default ipc path"""
+    pl = platform.system()
+    ipcdir = "~/.ethereum/geth.ipc"
+    if pl == "Darwin":
+        ipcdir = "~/Library/Ethereum/geth.ipc"
+    elif pl == "Windows":
+        ipcdir = "~/AppData/Roaming/Ethereum/geth.ipc"
+    elif pl == "Linux":
+        ipcdir = "~/.ethereum/geth.ipc"
+    else:
+        logging.error('Platform unknown %s. Contact devs at iopixel dot com', platform)
+        sys.exit(-1)
+    ipcdir = os.path.expanduser(ipcdir)
+    return ipcdir
 
 def checkDir(path):
     """Check the path exists and it is a directory"""
@@ -182,7 +218,7 @@ def start(args):
     # start geth with mining
     datadir = load_config_keys("datadir")
     geth = checkGethCommand()
-    options = [ "--datadir", datadir, "--dev", "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1" ]
+    options = [ "--datadir", datadir, "--dev", "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1", "--ipcpath", getIpcDir() ]
     cmdStart = [ geth ] + options
     logging.debug("cmd: " + str(cmdStart))
     logfile = open("geth.logs", "w")
