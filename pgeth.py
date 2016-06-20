@@ -39,10 +39,9 @@ def init(args):
     # account new
     initAccount()
     datadir = load_config_keys("datadir")
-    genesis = load_config_keys("genesis")
     str_options = " --verbosity 3 --datadir=" + datadir + " "
     # launch the blockchain with the CustomGenesis.json file
-    cmdInit = "geth" + str_options + " init" + " custom_genesis.json"
+    cmdInit = "geth" + str_options + " init" + " pgeth_config.json"
     print "cmd: " + cmdInit
     subprocess.call(cmdInit, shell = True) 
 
@@ -57,7 +56,7 @@ def start(args):
     subprocess.call(cmd, shell = True)
 
 def stop(args):
-    """ doc """
+    
     print args
 
 if __name__ == "__main__":
