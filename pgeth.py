@@ -61,7 +61,7 @@ def checkGethCommand():
     sys.exit(0)
 
 def test(args):
-    print checkGethCommand()
+    checkGethCommand()
 
 def destroyPrivateBlochain():
     """Destroy your private blockchain"""
@@ -80,13 +80,11 @@ def destroyPrivateBlochain():
 def initAccount():
     """List accounts. Create a default one if there is none"""
     datadir = getDataDir()
-    str_geth = "/usr/local/bin/geth"
-    str_options = " --datadir=" + datadir + " "
-    cmdListAccounts = str_geth + str_options + " account list"
-    print "cmd: " + cmdListAccounts
-    res = subprocess.check_output([ "/usr/local/bin/geth", "--datadir", datadir, "account", "list"])
-    print res
-    sys.exit(1)
+    geth = checkGethCommand()
+    options = [ "--datadir", datadir ]
+    cmdListAccounts = [ geth ] + options + ["account", "list"]
+    print "cmd: " + str(cmdListAccounts)
+    res = subprocess.check_output(cmdListAccounts)
     accountQty = len(res.split('\n')) - 1
     # check account qty
     if accountQty > 0:
@@ -96,31 +94,34 @@ def initAccount():
     f.write(load_config_keys("password"))
     f.close()
     # create an account
-    cmdCreateAccount = str_geth + str_options + " --password mypassword.txt account new"
-    print "cmd: " + cmdCreateAccount
-    subprocess.call(cmdCreateAccount, shell=True)
+    cmdCreateAccount = [ geth ] + options + [ "--password", "mypassword.txt", "account", "new" ]
+    print "cmd: " + str(cmdCreateAccount)
+    subprocess.call(cmdCreateAccount)
     ## geth --networkid 100 --identity node1 --verbosity 3 --nodiscover --nat none --datadir=~/myblockchain/node1 account new
 
 def init(args):
-    """doc3S"""
-    # account new
+    """init command"""
+    # account management
     initAccount()
-    datadir = load_config_keys("datadir")
-    str_options = " --verbosity 3 --datadir=" + datadir + " "
+    # init needed if there is no chaindata dir
+    datadir = getDataDir()
+    if checkDir(os.path.join(datadir, 'chaindata')):
+        return
+    geth = checkGethCommand()
+    options = [ "--datadir", datadir ]
     # launch the blockchain with the CustomGenesis.json file
-    cmdInit = "geth" + str_options + " init" + " pgeth_config.json"
-    print "cmd: " + cmdInit
-    subprocess.call(cmdInit, shell = True) 
+    cmdInit = [ geth ] + options + [ "init", "pgeth_config.json"]
+    print "cmd: " + str(cmdInit)
+    subprocess.call(cmdInit) 
 
 def start(args):
     """ doc """
     datadir = load_config_keys("datadir")
-    str_datadir = " --datadir=" + datadir + " "
-    str_options =  " --networkid 100 --identity node1 --verbosity 3 --nodiscover --nat none "
-    str_args = "geth " + str_datadir + str_options + "account new"
-    cmd = "geth" + str_options + str_datadir + " --mine" + " --ipcpath ~/Library/Ethereum/geth.ipc"
-    print cmd
-    subprocess.call(cmd, shell = True)
+    geth = checkGethCommand()
+    options = [ "--datadir", datadir, "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1" ]
+    cmdStart = [ geth ] + options
+    print "cmd: " + str(cmdStart)
+    subprocess.Popen(cmdStart)
 
 def stop(args):
     print args
