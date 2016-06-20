@@ -69,7 +69,7 @@ def checkGethCommand():
     sys.exit(0)
 
 def test(args):
-    checkGethCommand()
+    checkIfGethIsRunning()
 
 def destroyPrivateBlochain():
     """Destroy your private blockchain"""
@@ -98,7 +98,7 @@ def destroyPrivateBlochain():
     try:
         os.rmdir(datadir)
     except:
-        sys.stderr.write("We do not destroy %s directory because there is something not standard in it." % datadir)
+        sys.stderr.write("We do not destroy %s directory because there is something not standard in it.\nRemove the directory after checks" % datadir)
         sys.exit(-1)
 
 def initAccount():
@@ -139,16 +139,20 @@ def init(args):
     subprocess.call(cmdInit) 
 
 def checkIfGethIsRunning():
-    """ """
-    print subprocess.check_output('ps ax | grep ',shell=True)
-
+    """Check if there is a geth running"""
+    try:
+        res = subprocess.check_output("ps ax | grep 'geth ' | grep -v \"grep\"", shell=True)
+        processQty = len(res.split('\n')) - 1
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
 
 def start(args):
     """ doc """
     datadir = load_config_keys("datadir")
     geth = checkGethCommand()
-    options = [ "--datadir", datadir, "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1" ]
+    options = [ "--datadir", datadir, "--dev", "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1" ]
     cmdStart = [ geth ] + options
     print "cmd: " + str(cmdStart)
     subprocess.Popen(cmdStart)
