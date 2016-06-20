@@ -7,27 +7,94 @@ import argparse
 import subprocess
 import json
 import os
+import shutil
 
 def load_config_keys(key):
     """ doc """
-    file = open("pgeth_config.json", "r")
-    txt = file.read()
-    file.close()
-    d = json.loads(txt)
-    return d[key]
+    try:
+        file = open("pgeth_config.json", "r")
+        txt = file.read()
+        file.close()
+        d = json.loads(txt)
+    except:
+        sys.stderr.write("invalid config file\n")
+        sys.exit(-1)
+    if d.has_key(key):
+        return d[key]
+    return None
+
+def getDataDir():
+    """Load datadir key and expand it"""
+    datadir = load_config_keys("datadir")
+    datadir = os.path.expanduser(datadir)
+    return datadir
+
+def checkDir(path):
+    """Check the path exists and it is a directory"""
+    if not os.path.exists(path):
+        return False
+    if not os.path.isdir(path):
+        return False
+    return True
+
+def checkFile(path):
+    """Check the path exists and it is a file"""
+    if not os.path.exists(path):
+        return False
+    if not os.path.isfile(path) and os.access(path, os.X_OK):
+        return False
+    return True
+
+def checkGethCommand():
+    """Search Geth command"""
+    geth = load_config_keys("geth")
+    if geth:
+        if checkFile(geth):
+            return geth
+        sys.stderr.write("invalid geth path in config file\n")
+        sys.exit(-1)
+    stdpaths = [ "/usr/bin/geth", "/usr/local/bin/geth", "/opt/local/bin/geth" ]
+    for p in stdpaths:
+        if checkFile(p):
+            return p
+    sys.stderr.write("no geth found in classic path. Use the geth param in the config file\n")
+    sys.exit(0)
+
+def test(args):
+    print checkGethCommand()
+
+def destroyPrivateBlochain():
+    """Destroy your private blockchain"""
+    datadir = getDataDir()
+    if not checkDir(datadir):
+        sys.stderr.write("nothing to destroy. There is no %s directory\n" % datadir)
+        sys.exit(-1)
+    chaindata = os.path.os.path.join(datadir, "chaindata")
+    keystore = os.path.os.path.join(datadir, "keystore")
+    if checkDir(chaindata):
+        shutil.rmtree(chaindata)
+    if checkDir(keystore):
+        shutil.rmtree(keystore)
+    os.rmdir(datadir)
 
 def initAccount():
     """List accounts. Create a default one if there is none"""
-    datadir = load_config_keys("datadir")
-    str_geth = "geth"
+    datadir = getDataDir()
+    str_geth = "/usr/local/bin/geth"
     str_options = " --datadir=" + datadir + " "
     cmdListAccounts = str_geth + str_options + " account list"
     print "cmd: " + cmdListAccounts
-    res = subprocess.check_output(cmdListAccounts, shell=True)
+    res = subprocess.check_output([ "/usr/local/bin/geth", "--datadir", datadir, "account", "list"])
+    print res
+    sys.exit(1)
     accountQty = len(res.split('\n')) - 1
     # check account qty
     if accountQty > 0:
         return
+    # create mypassword.txt
+    f = open("mypassword.txt", "w")
+    f.write(load_config_keys("password"))
+    f.close()
     # create an account
     cmdCreateAccount = str_geth + str_options + " --password mypassword.txt account new"
     print "cmd: " + cmdCreateAccount
@@ -56,8 +123,13 @@ def start(args):
     subprocess.call(cmd, shell = True)
 
 def stop(args):
-    
     print args
+
+def destroy(args):
+    destroyPrivateBlochain()
+
+def testpython(args):
+    testpython()
 
 if __name__ == "__main__":
 
@@ -74,6 +146,13 @@ if __name__ == "__main__":
 
     stop_parser = subparsers.add_parser('stop')
     stop_parser.set_defaults(func = stop)
+
+    destroy_parser = subparsers.add_parser('destroy')
+    destroy_parser.set_defaults(func = destroy)
+
+    test_parser = subparsers.add_parser('test')
+    test_parser.set_defaults(func = test)
+
 
     args = parser.parse_args()
     args.func(args)  # call the default function
