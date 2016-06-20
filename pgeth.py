@@ -37,6 +37,14 @@ def checkDir(path):
         return False
     return True
 
+def checkExe(path):
+    """Check the path exists and it is a file"""
+    if not os.path.exists(path):
+        return False
+    if not os.path.isfile(path) and os.access(path, os.X_OK):
+        return False
+    return True
+
 def checkFile(path):
     """Check the path exists and it is a file"""
     if not os.path.exists(path):
@@ -49,13 +57,13 @@ def checkGethCommand():
     """Search Geth command"""
     geth = load_config_keys("geth")
     if geth:
-        if checkFile(geth):
+        if checkExe(geth):
             return geth
         sys.stderr.write("invalid geth path in config file\n")
         sys.exit(-1)
     stdpaths = [ "/usr/bin/geth", "/usr/local/bin/geth", "/opt/local/bin/geth" ]
     for p in stdpaths:
-        if checkFile(p):
+        if checkExe(p):
             return p
     sys.stderr.write("no geth found in classic path. Use the geth param in the config file\n")
     sys.exit(0)
@@ -71,11 +79,27 @@ def destroyPrivateBlochain():
         sys.exit(-1)
     chaindata = os.path.os.path.join(datadir, "chaindata")
     keystore = os.path.os.path.join(datadir, "keystore")
+    dapp = os.path.os.path.join(datadir, "dapp")
+    nodekey = os.path.os.path.join(datadir, "nodekey")
+    dsstore = os.path.os.path.join(datadir, ".DS_Store")
+    ipcfile = os.path.os.path.join(datadir, "geth.ipc")
     if checkDir(chaindata):
         shutil.rmtree(chaindata)
     if checkDir(keystore):
         shutil.rmtree(keystore)
-    os.rmdir(datadir)
+    if checkDir(dapp):
+        shutil.rmtree(dapp)
+    if checkDir(dsstore):
+        shutil.rmtree(dsstore)
+    if checkFile(nodekey):
+        os.remove(nodekey)
+    if checkFile(ipcfile):
+        os.remove(ipcfile)
+    try:
+        os.rmdir(datadir)
+    except:
+        sys.stderr.write("We do not destroy %s directory because there is something not standard in it." % datadir)
+        sys.exit(-1)
 
 def initAccount():
     """List accounts. Create a default one if there is none"""
@@ -113,6 +137,12 @@ def init(args):
     cmdInit = [ geth ] + options + [ "init", "pgeth_config.json"]
     print "cmd: " + str(cmdInit)
     subprocess.call(cmdInit) 
+
+def checkIfGethIsRunning():
+    """ """
+    print subprocess.check_output('ps ax | grep ',shell=True)
+
+
 
 def start(args):
     """ doc """
