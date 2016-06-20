@@ -111,7 +111,7 @@ def initAccount():
     geth = checkGethCommand()
     options = [ "--datadir", datadir ]
     cmdListAccounts = [ geth ] + options + ["account", "list"]
-    print "cmd: " + str(cmdListAccounts)
+    logging.debug("cmd: " + str(cmdListAccounts))
     res = subprocess.check_output(cmdListAccounts)
     accountQty = len(res.split('\n')) - 1
     # check account qty
@@ -123,7 +123,7 @@ def initAccount():
     f.close()
     # create an account
     cmdCreateAccount = [ geth ] + options + [ "--password", "mypassword.txt", "account", "new" ]
-    print "cmd: " + str(cmdCreateAccount)
+    logging.debug("cmd: " + str(cmdCreateAccount))
     subprocess.call(cmdCreateAccount)
     ## geth --networkid 100 --identity node1 --verbosity 3 --nodiscover --nat none --datadir=~/myblockchain/node1 account new
 
@@ -139,13 +139,15 @@ def init(args):
     options = [ "--datadir", datadir ]
     # launch the blockchain with the CustomGenesis.json file
     cmdInit = [ geth ] + options + [ "init", "pgeth_config.json"]
-    print "cmd: " + str(cmdInit)
+    logging.debug("cmd: " + str(cmdInit))
     subprocess.call(cmdInit) 
 
 def checkIfGethIsRunningByGrep():
     """Check if there is a geth running"""
     try:
-        res = subprocess.check_output("ps ax | grep 'geth ' | grep -v \"grep\"", shell=True)
+        cmd = "ps ax | grep 'geth ' | grep -v \"grep\""
+        logging.debug(cmd)
+        res = subprocess.check_output(cmd, shell=True)
         processQty = len(res.split('\n')) - 1
         return True
     except subprocess.CalledProcessError:
@@ -169,14 +171,14 @@ def start(args):
     geth = checkGethCommand()
     options = [ "--datadir", datadir, "--dev", "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1" ]
     cmdStart = [ geth ] + options
-    print "cmd: " + str(cmdStart)
+    logging.debug("cmd: " + str(cmdStart))
     logfile = open("geth.logs", "w")
     process = subprocess.Popen(cmdStart, stdout=logfile, stderr=logfile)
     # write the the pid file
     pidfile = open(PIDFILE, "w")
     pidfile.write(str(process.pid))
     pidfile.close()
-    print "geth starting"
+    logging.info("geth starting")
 
 def stop(args):
     # check if there is a PID File
@@ -195,7 +197,7 @@ def stop(args):
         os.kill(pid, 1)
     finally:
         os.remove(PIDFILE)
-    print "geth stopping"
+    logging.info("geth stopping")
 
     
 
@@ -206,6 +208,7 @@ def testpython(args):
     testpython()
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
 
     parser = argparse.ArgumentParser(description = 'to be completed')
 
