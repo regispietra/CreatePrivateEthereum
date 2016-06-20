@@ -8,6 +8,10 @@ import subprocess
 import json
 import os
 import shutil
+import logging
+
+# const in python
+PIDFILE = "/tmp/geth.pid"
 
 def load_config_keys(key):
     """ doc """
@@ -138,7 +142,7 @@ def init(args):
     print "cmd: " + str(cmdInit)
     subprocess.call(cmdInit) 
 
-def checkIfGethIsRunning():
+def checkIfGethIsRunningByGrep():
     """Check if there is a geth running"""
     try:
         res = subprocess.check_output("ps ax | grep 'geth ' | grep -v \"grep\"", shell=True)
@@ -147,18 +151,53 @@ def checkIfGethIsRunning():
     except subprocess.CalledProcessError:
         return False
 
+def checkIfGethIsRunning():
+    """Check if there is a geth running"""
+    if checkFile(PIDFILE):
+        return True
+    return False
+
 
 def start(args):
     """ doc """
+    # check if there is a PID File
+    if checkIfGethIsRunning():
+        sys.stderr.write("geth must already be running (If not remove the %s file)\n" % PIDFILE)        
+        sys.exit(1)
+    # start geth with mining
     datadir = load_config_keys("datadir")
     geth = checkGethCommand()
     options = [ "--datadir", datadir, "--dev", "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1" ]
     cmdStart = [ geth ] + options
     print "cmd: " + str(cmdStart)
-    subprocess.Popen(cmdStart)
+    logfile = open("geth.logs", "w")
+    process = subprocess.Popen(cmdStart, stdout=logfile, stderr=logfile)
+    # write the the pid file
+    pidfile = open(PIDFILE, "w")
+    pidfile.write(str(process.pid))
+    pidfile.close()
+    print "geth starting"
 
 def stop(args):
-    print args
+    # check if there is a PID File
+    if not checkIfGethIsRunning():
+        sys.stderr.write("geth not running (because there is no %s file)\n" % PIDFILE)        
+        sys.exit(1)
+    # read the pid file
+    pidfile = open(PIDFILE, "r")
+    text = pidfile.read()
+    pidfile.close()
+    try:
+        pid = int(text)
+    except e:
+        sys.stderr.write("Invalid %s file)\n" % PIDFILE)
+    try:
+        os.kill(pid, 1)
+    finally:
+        os.remove(PIDFILE)
+    print "geth stopping"
+
+    
 
 def destroy(args):
     destroyPrivateBlochain()
