@@ -21,7 +21,7 @@ def load_config_keys(key):
         file.close()
         d = json.loads(txt)
     except:
-        sys.stderr.write("invalid config file\n")
+        logging.error("invalid config file")
         sys.exit(-1)
     if d.has_key(key):
         return d[key]
@@ -63,13 +63,13 @@ def checkGethCommand():
     if geth:
         if checkExe(geth):
             return geth
-        sys.stderr.write("invalid geth path in config file\n")
+        logging.error("invalid geth path in config file")
         sys.exit(-1)
     stdpaths = [ "/usr/bin/geth", "/usr/local/bin/geth", "/opt/local/bin/geth" ]
     for p in stdpaths:
         if checkExe(p):
             return p
-    sys.stderr.write("no geth found in classic path. Use the geth param in the config file\n")
+    logging.error("no geth found in classic path. Use the geth param in the config file")
     sys.exit(0)
 
 def test(args):
@@ -79,7 +79,7 @@ def destroyPrivateBlochain():
     """Destroy your private blockchain"""
     datadir = getDataDir()
     if not checkDir(datadir):
-        sys.stderr.write("nothing to destroy. There is no %s directory\n" % datadir)
+        logging.error("nothing to destroy. There is no %s directory" % datadir)
         sys.exit(-1)
     chaindata = os.path.os.path.join(datadir, "chaindata")
     keystore = os.path.os.path.join(datadir, "keystore")
@@ -102,7 +102,7 @@ def destroyPrivateBlochain():
     try:
         os.rmdir(datadir)
     except:
-        sys.stderr.write("We do not destroy %s directory because there is something not standard in it.\nRemove the directory after checks" % datadir)
+        logging.error("We do not destroy %s directory because there is something not standard in it.\nRemove the directory after checks" % datadir)
         sys.exit(-1)
 
 def initAccount():
@@ -164,7 +164,7 @@ def start(args):
     """ doc """
     # check if there is a PID File
     if checkIfGethIsRunning():
-        sys.stderr.write("geth must already be running (If not remove the %s file)\n" % PIDFILE)        
+        logging.error("geth must already be running (If not remove the %s file)" % PIDFILE)        
         sys.exit(1)
     # start geth with mining
     datadir = load_config_keys("datadir")
@@ -183,7 +183,7 @@ def start(args):
 def stop(args):
     # check if there is a PID File
     if not checkIfGethIsRunning():
-        sys.stderr.write("geth not running (because there is no %s file)\n" % PIDFILE)        
+        logging.error("geth not running (because there is no %s file)" % PIDFILE)        
         sys.exit(1)
     # read the pid file
     pidfile = open(PIDFILE, "r")
