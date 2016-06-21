@@ -1,4 +1,4 @@
-Create Private Ethereum Blockchain
+# Create Private Ethereum Blockchain
 
 This script pilots geth to provide easy functions:
  * ./pgeth.py init: this function create the blockchain with an account. Use it the first time.

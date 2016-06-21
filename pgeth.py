@@ -19,6 +19,8 @@ __version__ = '1.0.0'
 
 """
 Create Private Ethereum Blockchain
+ by ellis2323 & regispietra
+ https://github.com/regispietra/CreatePrivateEthereum
 
 This script pilots geth to provide easy functions:
 
@@ -58,6 +60,7 @@ def load_config_keys(key):
         d = json.loads(txt)
     except:
         logging.error("invalid config file")
+        logging.error("please use and modify the pgeth_config.json (https://github.com/regispietra/CreatePrivateEthereum)")
         sys.exit(-1)
     if d.has_key(key):
         return d[key]
