@@ -20,13 +20,16 @@ __version__ = '1.0.0'
 """
 Create Private Ethereum Blockchain
 
-This script pilot geth to provide easy functions:
+This script pilots geth to provide easy functions:
 
 * ./pgeth.py init
    this function create the blockchain with an account
+
 * ./pgeth.py start
+   this function starts geth daemon and mining
 
 * ./pgeth.py stop
+    this functions stops geth
 
 * ./pgeth.py destroy
    A function to delete quickly your private blockchain.
