@@ -28,7 +28,8 @@ This script pilots geth to provide easy functions:
    this function create the blockchain with an account
 
 * ./pgeth.py start
-   this function starts geth daemon and mining
+   this function starts geth daemon and mining. When it has started, you could use your Ethereun Wallet to see
+   contracts and tokens.
 
 * ./pgeth.py stop
     this functions stops geth
@@ -47,9 +48,26 @@ import os
 import shutil
 import logging
 import platform
+import re
 
 # const in python
 PIDFILE = "/tmp/geth.pid"
+
+# alloc with 1000 ethers
+GENESIS = u"""{
+"bordel": "fds",
+  "nonce": "0xdeadbeefdeadbeef",
+  "timestamp": "0x0",
+  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "extraData": "0x00",
+  "gasLimit": "0x8000000",
+  "difficulty": "0x400",
+  "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "coinbase": "0x0000000000000000000000000000000000000000",
+  "alloc": {
+      "0x$ADDRESS$": { "balance": "1000000000000000000000" }
+  }
+}"""
 
 def load_config_keys(key):
     """ doc """
@@ -128,7 +146,7 @@ def checkGethCommand():
     sys.exit(0)
 
 def test(args):
-    checkIfGethIsRunning()
+    getAddress()
 
 def destroyPrivateBlochain():
     """Destroy your private blockchain"""
@@ -159,6 +177,27 @@ def destroyPrivateBlochain():
     except:
         logging.error("We do not destroy %s directory because there is something not standard in it.\nRemove the directory after checks" % datadir)
         sys.exit(-1)
+
+def getAddress():
+    """Get the address of the account 0"""
+    datadir = getDataDir()
+    geth = checkGethCommand()
+    options = [ "--datadir", datadir ]
+    cmdListAccounts = [ geth ] + options + ["account", "list"]
+    logging.debug("cmd: " + str(cmdListAccounts))
+    res = subprocess.check_output(cmdListAccounts)
+    accountQty = len(res.split('\n')) - 1
+    if accountQty == 0:
+        return None
+    line = res.split('\n')[0]
+    regexp = re.search(u"{([0-9abcdefABCDEF]+)}", line)
+    if regexp == None:
+        logging.error("No address found in keystore")
+        sys.exit(-1)
+    result = regexp.group(1)
+    logging.debug('adress found: 0x' + result)
+    return result
+
 
 def initAccount():
     """List accounts. Create a default one if there is none"""
@@ -191,9 +230,15 @@ def init(args):
     if checkDir(os.path.join(datadir, 'chaindata')):
         return
     geth = checkGethCommand()
-    options = [ "--datadir", datadir ]
+    options = [ "--datadir", datadir, "--networkid", "100" ]
+    # create the json genesis
+    address = getAddress()
+    txt = GENESIS.replace("$ADDRESS$", address)
+    f = open("genesis.json", "w")
+    f.write(txt)
+    f.close()
     # launch the blockchain with the CustomGenesis.json file
-    cmdInit = [ geth ] + options + [ "init", "pgeth_config.json"]
+    cmdInit = [ geth ] + options + [ "init", "genesis.json"]
     logging.debug("cmd: " + str(cmdInit))
     subprocess.call(cmdInit) 
 
@@ -224,7 +269,7 @@ def start(args):
     # start geth with mining
     datadir = load_config_keys("datadir")
     geth = checkGethCommand()
-    options = [ "--datadir", datadir, "--dev", "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1", "--ipcpath", getIpcDir() ]
+    options = [ "--datadir", datadir, "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1", "--ipcpath", getIpcDir() ]
     cmdStart = [ geth ] + options
     logging.debug("cmd: " + str(cmdStart))
     logfile = open("geth.logs", "w")
@@ -259,11 +304,8 @@ def stop(args):
 def destroy(args):
     destroyPrivateBlochain()
 
-def testpython(args):
-    testpython()
-
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
 
     parser = argparse.ArgumentParser(description = 'to be completed')
 
