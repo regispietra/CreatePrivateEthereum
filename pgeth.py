@@ -146,7 +146,7 @@ def checkGethCommand():
     sys.exit(0)
 
 def test(args):
-    getAddress()
+    return getAddress()
 
 def destroyPrivateBlochain():
     """Destroy your private blockchain"""
