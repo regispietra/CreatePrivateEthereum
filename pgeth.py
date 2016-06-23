@@ -149,7 +149,7 @@ def strCommand(cmd):
     return " ".join(cmd)
 
 def test(args):
-    getAddress()
+    return getAddress()
 
 def destroyPrivateBlochain():
     """Destroy your private blockchain"""
