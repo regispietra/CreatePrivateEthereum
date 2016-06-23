@@ -55,7 +55,6 @@ PIDFILE = "/tmp/geth.pid"
 
 # alloc with 1000 ethers
 GENESIS = u"""{
-"bordel": "fds",
   "nonce": "0xdeadbeefdeadbeef",
   "timestamp": "0x0",
   "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -145,6 +144,10 @@ def checkGethCommand():
     logging.error("no geth found in classic path. Use the geth param in the config file")
     sys.exit(0)
 
+def strCommand(cmd):
+    """cmd ie list of word into a string"""
+    return " ".join(cmd)
+
 def test(args):
     getAddress()
 
@@ -154,12 +157,12 @@ def destroyPrivateBlochain():
     if not checkDir(datadir):
         logging.error("nothing to destroy. There is no %s directory" % datadir)
         sys.exit(-1)
-    chaindata = os.path.os.path.join(datadir, "chaindata")
-    keystore = os.path.os.path.join(datadir, "keystore")
-    dapp = os.path.os.path.join(datadir, "dapp")
-    nodekey = os.path.os.path.join(datadir, "nodekey")
-    dsstore = os.path.os.path.join(datadir, ".DS_Store")
-    ipcfile = os.path.os.path.join(datadir, "geth.ipc")
+    chaindata = os.path.join(datadir, "chaindata")
+    keystore = os.path.join(datadir, "keystore")
+    dapp = os.path.join(datadir, "dapp")
+    nodekey = os.path.join(datadir, "nodekey")
+    dsstore = os.path.join(datadir, ".DS_Store")
+    ipcfile = os.path.join(datadir, "geth.ipc")
     if checkDir(chaindata):
         shutil.rmtree(chaindata)
     if checkDir(keystore):
@@ -184,7 +187,7 @@ def getAddress():
     geth = checkGethCommand()
     options = [ "--datadir", datadir ]
     cmdListAccounts = [ geth ] + options + ["account", "list"]
-    logging.debug("cmd: " + str(cmdListAccounts))
+    logging.debug("cmd: " + strCommand(cmdListAccounts))
     res = subprocess.check_output(cmdListAccounts)
     accountQty = len(res.split('\n')) - 1
     if accountQty == 0:
@@ -205,7 +208,7 @@ def initAccount():
     geth = checkGethCommand()
     options = [ "--datadir", datadir ]
     cmdListAccounts = [ geth ] + options + ["account", "list"]
-    logging.debug("cmd: " + str(cmdListAccounts))
+    logging.debug("cmd: " + strCommand(cmdListAccounts))
     res = subprocess.check_output(cmdListAccounts)
     accountQty = len(res.split('\n')) - 1
     # check account qty
@@ -217,9 +220,33 @@ def initAccount():
     f.close()
     # create an account
     cmdCreateAccount = [ geth ] + options + [ "--password", "mypassword.txt", "account", "new" ]
-    logging.debug("cmd: " + str(cmdCreateAccount))
+    logging.debug("cmd: " + strCommand(cmdCreateAccount))
     subprocess.call(cmdCreateAccount)
-    ## geth --networkid 100 --identity node1 --verbosity 3 --nodiscover --nat none --datadir=~/myblockchain/node1 account new
+
+def checkIfGethIsRunningByGrep():
+    """Check if there is a geth running"""
+    try:
+        cmd = "ps ax | grep 'geth ' | grep -v \"grep\""
+        logging.debug(cmd)
+        res = subprocess.check_output(cmd, shell=True)
+        processQty = len(res.split('\n')) - 1
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+def checkIfGethIsRunning():
+    """Check if there is a geth running"""
+    if checkFile(PIDFILE):
+        return True
+    return False
+
+def importKeys():
+    """ """
+    pass
+
+def importContracts():
+    """ """
+    pass
 
 def init(args):
     """init command"""
@@ -239,29 +266,11 @@ def init(args):
     f.close()
     # launch the blockchain with the CustomGenesis.json file
     cmdInit = [ geth ] + options + [ "init", "genesis.json"]
-    logging.debug("cmd: " + str(cmdInit))
+    logging.debug("cmd: " + strCommand(cmdInit))
     subprocess.call(cmdInit) 
 
-def checkIfGethIsRunningByGrep():
-    """Check if there is a geth running"""
-    try:
-        cmd = "ps ax | grep 'geth ' | grep -v \"grep\""
-        logging.debug(cmd)
-        res = subprocess.check_output(cmd, shell=True)
-        processQty = len(res.split('\n')) - 1
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-def checkIfGethIsRunning():
-    """Check if there is a geth running"""
-    if checkFile(PIDFILE):
-        return True
-    return False
-
-
 def start(args):
-    """ doc """
+    """start the geth daemon"""
     # check if there is a PID File
     if checkIfGethIsRunning():
         logging.error("geth must already be running (If not remove the %s file)" % PIDFILE)        
@@ -271,7 +280,7 @@ def start(args):
     geth = checkGethCommand()
     options = [ "--datadir", datadir, "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1", "--ipcpath", getIpcDir() ]
     cmdStart = [ geth ] + options
-    logging.debug("cmd: " + str(cmdStart))
+    logging.debug("cmd: " + strCommand(cmdStart))
     logfile = open("geth.logs", "w")
     process = subprocess.Popen(cmdStart, stdout=logfile, stderr=logfile)
     # write the the pid file
@@ -281,6 +290,7 @@ def start(args):
     logging.info("geth starting")
 
 def stop(args):
+    """stop the geth daemon"""
     # check if there is a PID File
     if not checkIfGethIsRunning():
         logging.error("geth not running (because there is no %s file)" % PIDFILE)        
@@ -299,10 +309,24 @@ def stop(args):
         os.remove(PIDFILE)
     logging.info("geth stopping")
 
-    
-
 def destroy(args):
+    """destroy your private blockchain"""
     destroyPrivateBlochain()
+
+
+def import_(args):
+    """fsdf"""
+    if not vars(args).has_key("type_"):
+        logging.error("Specify contacts or keys")
+        sys.exit(-1)
+    type_ = vars(args)['type_'][0]
+    if type_ == "contracts":
+        importContracts()
+    elif  type_ == "keys":
+        importKeys()
+    else:
+        logging.error("Specify contracts or keys")
+        sys.exit(-1)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
@@ -323,6 +347,10 @@ if __name__ == "__main__":
 
     destroy_parser = subparsers.add_parser('destroy')
     destroy_parser.set_defaults(func = destroy)
+
+    import_parser = subparsers.add_parser('import')
+    import_parser.add_argument('type_', nargs=1, help='keys or contracts')
+    import_parser.set_defaults(func = import_)
 
     test_parser = subparsers.add_parser('test')
     test_parser.set_defaults(func = test)
