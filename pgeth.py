@@ -279,6 +279,7 @@ def start(args):
     datadir = load_config_keys("datadir")
     geth = checkGethCommand()
     options = [ "--datadir", datadir, "--networkid", "100", "--nodiscover", "--nat", "none", "--mine", "--minerthreads", "1", "--ipcpath", getIpcDir() ]
+    options += [ "--rpc", "--rpcport", "8545", "--rpcapi", "'web3,eth,debug'", "--rpccorsdomain",  "'*'" ];
     cmdStart = [ geth ] + options
     logging.debug("cmd: " + strCommand(cmdStart))
     logfile = open("geth.logs", "w")
