@@ -55,6 +55,9 @@ PIDFILE = "/tmp/geth.pid"
 
 # alloc with 1000 ethers
 GENESIS = u"""{
+ "config": {
+     "chainId": 15
+  },
   "nonce": "0xdeadbeefdeadbeef",
   "timestamp": "0x0",
   "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
