@@ -82,7 +82,7 @@ def load_config_keys(key):
         logging.error("invalid config file")
         logging.error("please use and modify the pgeth_config.json (https://github.com/regispietra/CreatePrivateEthereum)")
         sys.exit(-1)
-    if d.has_key(key):
+    if key in d:
         return d[key]
     return None
 
@@ -320,7 +320,7 @@ def destroy(args):
 
 def import_(args):
     """fsdf"""
-    if not vars(args).has_key("type_"):
+    if "type_" not in vars(args):
         logging.error("Specify contacts or keys")
         sys.exit(-1)
     type_ = vars(args)['type_'][0]
